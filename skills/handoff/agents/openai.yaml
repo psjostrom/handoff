@@ -1,0 +1,6 @@
+interface:
+  display_name: "Handoff"
+  short_description: "Write handoff dossiers for the next agent"
+  default_prompt: "Use $handoff:handoff to write a handoff dossier for the next agent."
+policy:
+  allow_implicit_invocation: false

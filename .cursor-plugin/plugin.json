@@ -1,0 +1,13 @@
+{
+  "name": "handoff",
+  "displayName": "Handoff",
+  "version": "1.0.0",
+  "description": "Creates self-contained handoff dossiers so a fresh standard or frontier agent can continue a task.",
+  "author": {
+    "name": "psjostrom",
+    "url": "https://github.com/psjostrom"
+  },
+  "repository": "https://github.com/psjostrom/agent-plugins",
+  "keywords": ["handoff", "context", "dossier", "agent-transfer"],
+  "skills": "./skills/"
+}
