@@ -181,6 +181,46 @@ class HandoffValidatorTests(unittest.TestCase):
         )
         self.assert_error("adapter must not host shared workflow prose")
 
+    def test_rejects_dossier_without_receiver_tier_gate(self) -> None:
+        path = self.path("plugins/handoff/skills/handoff/references/dossier.md")
+        pristine = path.read_text(encoding="utf-8")
+        markers = (
+            *validator.DOSSIER_RECEIVER_STARTUP_MARKERS,
+            *validator.DOSSIER_RESUME_MARKERS,
+        )
+        for marker in markers:
+            self.assertIn(marker, pristine)
+            path.write_text(pristine.replace(marker, ""), encoding="utf-8")
+            self.assert_error(f"missing required marker '{marker}'")
+            path.write_text(pristine, encoding="utf-8")
+
+    def test_rejects_tier_ref_without_receiver_classification(self) -> None:
+        path = self.path("plugins/handoff/skills/handoff/references/tier-selection.md")
+        pristine = path.read_text(encoding="utf-8")
+        markers = (
+            "Receiver classification",
+            *validator.TIER_RECEIVER_CLASSIFICATION_MARKERS,
+        )
+        for marker in markers:
+            self.assertIn(marker, pristine)
+            path.write_text(pristine.replace(marker, ""), encoding="utf-8")
+            self.assert_error(f"missing required marker '{marker}'")
+            path.write_text(pristine, encoding="utf-8")
+
+    def test_rejects_dossier_gate_markers_outside_startup_section(self) -> None:
+        path = self.path("plugins/handoff/skills/handoff/references/dossier.md")
+        pristine = path.read_text(encoding="utf-8")
+        startup_start = pristine.index("**Receiver startup**")
+        mission_start = pristine.index("**Mission**")
+        stripped = (
+            pristine[:startup_start]
+            + "**Receiver startup** — placeholder without gate.\n\n"
+            + pristine[mission_start:]
+            + "\nTier gate Auto unknown unlabeled proceed anyway Required tier\n"
+        )
+        path.write_text(stripped, encoding="utf-8")
+        self.assert_error("missing required marker 'Tier gate'")
+
     def test_rejects_marketplace_wrong_description_when_present(self) -> None:
         data = json.loads(
             self.path(".cursor-plugin/marketplace.json").read_text(encoding="utf-8")

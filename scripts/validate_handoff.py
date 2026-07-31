@@ -74,12 +74,44 @@ DOSSIER_MARKERS = (
     "frontier",
 )
 
+DOSSIER_RECEIVER_STARTUP_MARKERS = (
+    "Tier gate",
+    "Auto",
+    "unknown",
+    "unlabeled",
+    "proceed anyway",
+    "After the gate passes",
+)
+
+DOSSIER_RECEIVER_STARTUP_ORDER = (
+    "Tier gate",
+    "Auto",
+    "unknown",
+    "unlabeled",
+    "proceed anyway",
+    "After the gate passes",
+)
+
+DOSSIER_RESUME_MARKERS = (
+    "Required tier",
+    "Auto",
+    "unknown",
+    "unlabeled",
+    "proceed anyway",
+)
+
 TIER_MARKERS = (
     "standard",
     "frontier",
     "When unsure, recommend **standard**",
     "Prefer **standard** when",
     "Prefer **frontier** when",
+    "Receiver classification",
+)
+
+TIER_RECEIVER_CLASSIFICATION_MARKERS = (
+    "proceed anyway",
+    "unlabeled",
 )
 
 THIN_SHELL_REQUIRED = (
@@ -397,6 +429,96 @@ def _validate_reference_markers(
             errors.append(f"{_display(path)}: missing required marker {marker!r}")
 
 
+def _section_between(text: str, start: str, end: Optional[str]) -> Optional[str]:
+    start_index = text.find(start)
+    if start_index < 0:
+        return None
+    content_start = start_index + len(start)
+    if end is None:
+        return text[content_start:]
+    end_index = text.find(end, content_start)
+    if end_index < 0:
+        return text[content_start:]
+    return text[content_start:end_index]
+
+
+def _validate_section_markers(
+    text: Optional[str],
+    path: Path,
+    section_name: str,
+    start: str,
+    end: Optional[str],
+    markers: tuple[str, ...],
+    errors: list[str],
+) -> Optional[str]:
+    if text is None:
+        return None
+    section = _section_between(text, start, end)
+    if section is None:
+        errors.append(f"{_display(path)}: missing {section_name} section")
+        return None
+    for marker in markers:
+        if marker not in section:
+            errors.append(f"{_display(path)}: missing required marker {marker!r}")
+    return section
+
+
+def _validate_ordered_markers(
+    section: Optional[str], path: Path, section_name: str, markers: tuple[str, ...], errors: list[str]
+) -> None:
+    if section is None:
+        return
+    positions: list[int] = []
+    for marker in markers:
+        index = section.find(marker)
+        if index < 0:
+            return
+        positions.append(index)
+    if positions != sorted(positions):
+        errors.append(
+            f"{_display(path)}: {section_name} markers out of order "
+            f"(expected {' -> '.join(markers)})"
+        )
+
+
+def _validate_dossier_contract(text: Optional[str], path: Path, errors: list[str]) -> None:
+    startup = _validate_section_markers(
+        text,
+        path,
+        "Receiver startup",
+        "**Receiver startup**",
+        "**Mission**",
+        DOSSIER_RECEIVER_STARTUP_MARKERS,
+        errors,
+    )
+    _validate_ordered_markers(
+        startup, path, "Receiver startup", DOSSIER_RECEIVER_STARTUP_ORDER, errors
+    )
+    _validate_section_markers(
+        text,
+        path,
+        "Resume prompt",
+        "**Resume prompt**",
+        "## Emphasis by tier",
+        DOSSIER_RESUME_MARKERS,
+        errors,
+    )
+
+
+def _validate_tier_receiver_classification(
+    text: Optional[str], path: Path, errors: list[str]
+) -> None:
+    _validate_section_markers(
+        text,
+        path,
+        "Receiver classification",
+        "## Receiver classification",
+        None,
+        TIER_RECEIVER_CLASSIFICATION_MARKERS,
+        errors,
+    )
+
+
 def _validate_thin_shell(text: Optional[str], path: Path, errors: list[str]) -> None:
     if text is None:
         return
@@ -457,12 +579,12 @@ def validate_bundle(repo_root: Path) -> list[str]:
 
     skill = _read_text(repo_root, SKILL, errors)
     _validate_skill_text(skill, errors)
-    _validate_reference_markers(
-        _read_text(repo_root, DOSSIER_REF, errors), DOSSIER_REF, DOSSIER_MARKERS, errors
-    )
-    _validate_reference_markers(
-        _read_text(repo_root, TIER_REF, errors), TIER_REF, TIER_MARKERS, errors
-    )
+    dossier = _read_text(repo_root, DOSSIER_REF, errors)
+    _validate_reference_markers(dossier, DOSSIER_REF, DOSSIER_MARKERS, errors)
+    _validate_dossier_contract(dossier, DOSSIER_REF, errors)
+    tier = _read_text(repo_root, TIER_REF, errors)
+    _validate_reference_markers(tier, TIER_REF, TIER_MARKERS, errors)
+    _validate_tier_receiver_classification(tier, TIER_REF, errors)
     for ref in (CODEX_REFERENCE, CLAUDE_REFERENCE, CURSOR_REFERENCE, OPENCODE_REFERENCE):
         text = _read_text(repo_root, ref, errors)
         if text is not None and "invocation" not in text.lower():

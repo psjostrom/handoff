@@ -37,3 +37,14 @@ Ask exactly (substitute the tier):
 > I recommend a \<tier\> agent for this one — do you agree?
 
 Proceed only after yes, or after the user names `standard` / `frontier`. If they reject without choosing a recognized tier, stop and do not write a dossier.
+
+## Receiver classification
+
+Every dossier’s **Receiver startup** must gate on the metadata `tier` before work. Writers copy the rule into the dossier; receivers apply it to the live chat model.
+
+| Required `tier` | May proceed without override | Must stop (ask to switch, or await `proceed anyway`) |
+| --- | --- | --- |
+| `frontier` | Opus / Grok 4.5 / Sol-class (and peers) | Sonnet / Terra / Composer / Auto / unknown / unlabeled |
+| `standard` | Any recognized agent, including frontier | (none — over-tier is OK) |
+
+This is a soft contract gate (prompt-enforced). Harnesses do not hard-block model selection; the dossier must still instruct under-tier receivers to stop before exploring or editing.
