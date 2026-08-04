@@ -248,6 +248,34 @@ class HandoffValidatorTests(unittest.TestCase):
         self.write_json(".cursor-plugin/marketplace.json", data)
         self.assert_error("marketplace handoff description")
 
+    def test_claude_manifest_and_marketplace_omit_version(self) -> None:
+        claude_path = "plugins/handoff/.claude-plugin/plugin.json"
+        marketplace_path = ".claude-plugin/marketplace.json"
+        claude = json.loads(self.path(claude_path).read_text(encoding="utf-8"))
+        self.assertNotIn("version", claude)
+        self.assertEqual([], validate_bundle(self.repo_root))
+
+        for present in ("1.0.0", "1.0.1"):
+            with self.subTest(location="manifest", version=present):
+                claude["version"] = present
+                self.write_json(claude_path, claude)
+                errors = self.assert_error(claude_path)
+                self.assertTrue(
+                    any("must omit version" in error for error in errors), errors
+                )
+        claude.pop("version", None)
+        self.write_json(claude_path, claude)
+
+        catalog = json.loads(self.path(marketplace_path).read_text(encoding="utf-8"))
+        handoff_entry = next(
+            item for item in catalog["plugins"] if item["name"] == "handoff"
+        )
+        self.assertNotIn("version", handoff_entry)
+        handoff_entry["version"] = "1.0.0"
+        self.write_json(marketplace_path, catalog)
+        errors = self.assert_error(marketplace_path)
+        self.assertTrue(any("must omit version" in error for error in errors), errors)
+
 
 if __name__ == "__main__":
     unittest.main()
