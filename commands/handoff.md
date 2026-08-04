@@ -1,5 +1,5 @@
 ---
-description: "Write a handoff dossier for a fresh standard or frontier agent"
+description: "Creates a self-contained handoff dossier for continuing work in a fresh agent session at standard or frontier capability. Use when the user invokes /handoff, asks for a handoff, context is polluted, or work should continue on a cheaper or stronger model."
 argument-hint: "[standard|frontier]"
 allowed-tools: ["Bash", "Glob", "Grep", "Read", "Edit", "Write", "AskUserQuestion"]
 ---

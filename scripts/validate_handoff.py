@@ -530,6 +530,12 @@ def _validate_thin_shell(text: Optional[str], path: Path, errors: list[str]) -> 
             errors.append(
                 f"{_display(path)}: thin shell must not host shared workflow prose {marker!r}"
             )
+    fm = _parse_simple_frontmatter(text)
+    if fm.get("description") != SKILL_DESCRIPTION:
+        errors.append(
+            f"{_display(path)}: command description must match SKILL_DESCRIPTION "
+            "(proactive-offer trigger)"
+        )
 
 
 def _validate_openai_metadata(text: Optional[str], errors: list[str]) -> None:
