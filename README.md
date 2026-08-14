@@ -106,6 +106,24 @@ python3 -m unittest scripts/test_validate_handoff.py
 ## Migration
 
 Existing Claude Code and Codex installs continue to use the Agent Plugins
-catalog. Reinstall Cursor from this repository. For OpenCode, run the global
-installer above, then remove any previous Handoff link with
-`./install-opencode.sh uninstall` before reinstalling if needed.
+catalog. Reinstall Cursor from this repository. For a legacy OpenCode catalog
+link, run this guarded replacement, then install:
+
+```sh
+if [ ! -L "$HOME/.config/opencode/commands/handoff.md" ]; then
+  echo "Refusing: Handoff command is not a symlink." >&2
+  exit 1
+fi
+case "$(readlink "$HOME/.config/opencode/commands/handoff.md")" in
+  */agent-plugins/plugins/handoff/opencode/commands/handoff.md)
+    rm "$HOME/.config/opencode/commands/handoff.md"
+    ;;
+  *)
+    echo "Refusing: Handoff command does not point at the legacy catalog." >&2
+    exit 1
+    ;;
+esac
+./install-opencode.sh install
+```
+
+It leaves any other link intact.

@@ -249,6 +249,31 @@ class OpenCodeInstallerTests(unittest.TestCase):
             check=False,
         )
 
+    def remove_legacy_handoff_link(self, home: Path) -> subprocess.CompletedProcess[str]:
+        return subprocess.run(
+            [
+                "sh",
+                "-c",
+                """if [ ! -L \"$HOME/.config/opencode/commands/handoff.md\" ]; then
+  echo \"Refusing: Handoff command is not a symlink.\" >&2
+  exit 1
+fi
+case \"$(readlink \"$HOME/.config/opencode/commands/handoff.md\")\" in
+  */agent-plugins/plugins/handoff/opencode/commands/handoff.md)
+    rm \"$HOME/.config/opencode/commands/handoff.md\"
+    ;;
+  *)
+    echo \"Refusing: Handoff command does not point at the legacy catalog.\" >&2
+    exit 1
+    ;;
+esac""",
+            ],
+            env={**os.environ, "HOME": str(home)},
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
     def test_global_install_list_and_uninstall_only_handoff(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / "handoff"
@@ -336,6 +361,43 @@ class OpenCodeInstallerTests(unittest.TestCase):
             uninstall = self.run_installer(root, home, "uninstall")
             self.assertEqual(uninstall.returncode, 0, uninstall.stderr)
             self.assertEqual(command.readlink(), foreign_target)
+
+    def test_legacy_link_migrates_only_after_guarded_removal(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "handoff"
+            shutil.copytree(
+                REPOSITORY_ROOT,
+                root,
+                ignore=shutil.ignore_patterns(".git", "__pycache__"),
+            )
+            home = Path(tmp) / "home"
+            command = home / ".config/opencode/commands/handoff.md"
+            command.parent.mkdir(parents=True)
+            legacy_target = (
+                Path(tmp)
+                / "agent-plugins/plugins/handoff/opencode/commands/handoff.md"
+            )
+            command.symlink_to(legacy_target)
+
+            install = self.run_installer(root, home, "install")
+            self.assertEqual(install.returncode, 0, install.stderr)
+            self.assertEqual(command.readlink(), legacy_target)
+
+            removal = self.remove_legacy_handoff_link(home)
+            self.assertEqual(removal.returncode, 0, removal.stderr)
+            self.assertFalse(command.is_symlink())
+
+            install = self.run_installer(root, home, "install")
+            self.assertEqual(install.returncode, 0, install.stderr)
+            self.assertEqual(
+                command.resolve(), (root / "opencode/commands/handoff.md").resolve()
+            )
+
+            refusal = self.remove_legacy_handoff_link(home)
+            self.assertNotEqual(refusal.returncode, 0)
+            self.assertEqual(
+                command.resolve(), (root / "opencode/commands/handoff.md").resolve()
+            )
 
 
 class StandalonePackagingTests(unittest.TestCase):
