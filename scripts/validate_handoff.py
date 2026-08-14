@@ -9,7 +9,7 @@ import sys
 from pathlib import Path
 from typing import Any, Optional
 
-PLUGIN_ROOT = Path("plugins/handoff")
+PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 CODEX_MANIFEST = PLUGIN_ROOT / ".codex-plugin/plugin.json"
 CLAUDE_MANIFEST = PLUGIN_ROOT / ".claude-plugin/plugin.json"
 CURSOR_MANIFEST = PLUGIN_ROOT / ".cursor-plugin/plugin.json"
@@ -23,11 +23,8 @@ CODEX_REFERENCE = PLUGIN_ROOT / "skills/handoff/references/codex.md"
 CLAUDE_REFERENCE = PLUGIN_ROOT / "skills/handoff/references/claude-code.md"
 CURSOR_REFERENCE = PLUGIN_ROOT / "skills/handoff/references/cursor.md"
 OPENCODE_REFERENCE = PLUGIN_ROOT / "skills/handoff/references/opencode.md"
-CODEX_MARKETPLACE = Path(".agents/plugins/marketplace.json")
-CLAUDE_MARKETPLACE = Path(".claude-plugin/marketplace.json")
-CURSOR_MARKETPLACE = Path(".cursor-plugin/marketplace.json")
-AGENTS_MD = Path("AGENTS.md")
-README = Path("README.md")
+README = PLUGIN_ROOT / "README.md"
+LICENSE = PLUGIN_ROOT / "LICENSE"
 
 DESCRIPTION = (
     "Creates self-contained handoff dossiers so a fresh standard or frontier "
@@ -46,6 +43,29 @@ CURSOR_INVOCATION = "/handoff"
 DEFAULT_PROMPT = (
     "Use $handoff:handoff to write a handoff dossier for the next agent."
 )
+REPOSITORY_URL = "https://github.com/psjostrom/handoff"
+MIT_LICENSE = """MIT License
+
+Copyright (c) 2026 Per Sjöström
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the \"Software\"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+"""
 AUTO_RUN_CONFIRMATION_MARKER = "never auto-run without user confirmation"
 PLATFORM_REFERENCE_SECTION = "select the platform reference"
 _CURSOR_BARE_INVOCATION_RE = re.compile(
@@ -126,11 +146,18 @@ THIN_SHELL_FORBIDDEN = (
 
 
 def _display(path: Path) -> str:
-    return path.as_posix()
+    try:
+        return path.relative_to(PLUGIN_ROOT).as_posix()
+    except ValueError:
+        return path.as_posix()
+
+
+def _bundle_path(repo_root: Path, path: Path) -> Path:
+    return repo_root / path.relative_to(PLUGIN_ROOT)
 
 
 def _load_json(repo_root: Path, relative_path: Path, errors: list[str]) -> Any:
-    path = repo_root / relative_path
+    path = _bundle_path(repo_root, relative_path)
     if not path.is_file():
         errors.append(f"missing required JSON file: {_display(relative_path)}")
         return None
@@ -142,7 +169,7 @@ def _load_json(repo_root: Path, relative_path: Path, errors: list[str]) -> Any:
 
 
 def _read_text(repo_root: Path, relative_path: Path, errors: list[str]) -> Optional[str]:
-    path = repo_root / relative_path
+    path = _bundle_path(repo_root, relative_path)
     if not path.is_file():
         errors.append(f"missing required file: {_display(relative_path)}")
         return None
@@ -209,49 +236,6 @@ def _parse_simple_frontmatter(text: str) -> dict[str, str]:
     return result
 
 
-def _marketplace_has_plugin(data: Any, source: Path, errors: list[str]) -> None:
-    if not isinstance(data, dict):
-        errors.append(f"{_display(source)}: marketplace root must be a JSON object")
-        return
-    plugins = data.get("plugins")
-    if not isinstance(plugins, list):
-        errors.append(f"{_display(source)}: marketplace plugins must be a list")
-        return
-    handoff_entry: Any = None
-    for entry in plugins:
-        if isinstance(entry, dict) and entry.get("name") == "handoff":
-            handoff_entry = entry
-            break
-    if handoff_entry is None:
-        errors.append(f"{_display(source)}: missing handoff plugin entry")
-        return
-    # Claude marketplace must omit version (SHA-tracked delivery). Cursor keeps
-    # its pin; Codex already omits. Do not restore Claude version for symmetry.
-    if source == CLAUDE_MARKETPLACE and "version" in handoff_entry:
-        errors.append(
-            f"{_display(source)}: Claude marketplace handoff entry must omit "
-            f"version (SHA-tracked delivery); found {handoff_entry.get('version')!r}"
-        )
-    if "description" in handoff_entry:
-        _require_equal(
-            handoff_entry,
-            ("description",),
-            DESCRIPTION,
-            "marketplace handoff description",
-            source,
-            errors,
-        )
-    if "keywords" in handoff_entry:
-        _require_equal(
-            handoff_entry,
-            ("keywords",),
-            KEYWORDS,
-            "marketplace handoff keywords",
-            source,
-            errors,
-        )
-
-
 def _validate_skill_adapter_reference(
     text: Optional[str], path: Path, errors: list[str]
 ) -> None:
@@ -301,7 +285,7 @@ def _validate_manifests(
         _require_equal(
             codex,
             ("repository",),
-            "https://github.com/psjostrom/agent-plugins",
+            REPOSITORY_URL,
             "Codex manifest repository",
             CODEX_MANIFEST,
             errors,
@@ -369,7 +353,7 @@ def _validate_manifests(
         _require_equal(
             cursor,
             ("repository",),
-            "https://github.com/psjostrom/agent-plugins",
+            REPOSITORY_URL,
             "Cursor manifest repository",
             CURSOR_MANIFEST,
             errors,
@@ -566,19 +550,24 @@ def _validate_openai_metadata(text: Optional[str], errors: list[str]) -> None:
         )
 
 
-def _validate_docs(agents: Optional[str], readme: Optional[str], errors: list[str]) -> None:
-    if agents is not None:
-        for marker in (
-            "plugins/handoff/",
-            "validate_handoff.py",
-            "test_validate_handoff.py",
-        ):
-            if marker not in agents:
-                errors.append(f"{_display(AGENTS_MD)}: missing {marker!r}")
+def _validate_docs(readme: Optional[str], errors: list[str]) -> None:
     if readme is not None:
-        for marker in ("handoff", "`/handoff`", "install-opencode.sh install handoff"):
+        for marker in (
+            "claude plugin marketplace add psjostrom/agent-plugins",
+            "claude plugin install handoff@agent-plugins",
+            "codex plugin marketplace add psjostrom/agent-plugins",
+            "codex plugin add handoff@agent-plugins",
+            REPOSITORY_URL,
+            "./install-opencode.sh install",
+            "--project",
+        ):
             if marker not in readme:
                 errors.append(f"{_display(README)}: missing {marker!r}")
+
+
+def _validate_license(text: Optional[str], errors: list[str]) -> None:
+    if text != MIT_LICENSE:
+        errors.append(f"{_display(LICENSE)}: must contain exact MIT license text")
 
 
 def validate_bundle(repo_root: Path) -> list[str]:
@@ -588,10 +577,6 @@ def validate_bundle(repo_root: Path) -> list[str]:
     claude = _load_json(repo_root, CLAUDE_MANIFEST, errors)
     cursor = _load_json(repo_root, CURSOR_MANIFEST, errors)
     _validate_manifests(codex, claude, cursor, errors)
-
-    for market in (CODEX_MARKETPLACE, CLAUDE_MARKETPLACE, CURSOR_MARKETPLACE):
-        data = _load_json(repo_root, market, errors)
-        _marketplace_has_plugin(data, market, errors)
 
     skill = _read_text(repo_root, SKILL, errors)
     _validate_skill_text(skill, errors)
@@ -613,18 +598,23 @@ def validate_bundle(repo_root: Path) -> list[str]:
     _validate_thin_shell(opencode_cmd, OPENCODE_COMMAND, errors)
     if opencode_cmd is not None and "SHARED_ROOT" not in opencode_cmd:
         errors.append(f"{_display(OPENCODE_COMMAND)}: must resolve SHARED_ROOT")
+    if opencode_cmd is not None and "*/opencode/commands/handoff.md)" not in opencode_cmd:
+        errors.append(
+            f"{_display(OPENCODE_COMMAND)}: must use standalone command suffix"
+        )
+    if opencode_cmd is not None and "../../skills/handoff" not in opencode_cmd:
+        errors.append(
+            f"{_display(OPENCODE_COMMAND)}: must derive shared root from command"
+        )
 
     _validate_openai_metadata(_read_text(repo_root, OPENAI_METADATA, errors), errors)
-    _validate_docs(
-        _read_text(repo_root, AGENTS_MD, errors),
-        _read_text(repo_root, README, errors),
-        errors,
-    )
+    _validate_docs(_read_text(repo_root, README, errors), errors)
+    _validate_license(_read_text(repo_root, LICENSE, errors), errors)
     return errors
 
 
 def main() -> int:
-    errors = validate_bundle(Path(__file__).resolve().parents[3])
+    errors = validate_bundle(PLUGIN_ROOT)
     if errors:
         for error in errors:
             print(error, file=sys.stderr)

@@ -6,7 +6,7 @@
     "name": "psjostrom",
     "url": "https://github.com/psjostrom"
   },
-  "repository": "https://github.com/psjostrom/agent-plugins",
+  "repository": "https://github.com/psjostrom/handoff",
   "keywords": ["handoff", "context", "dossier", "agent-transfer"],
   "skills": "./skills/",
   "interface": {
