@@ -32,8 +32,9 @@ codex plugin add handoff@agent-plugins
 
 ### Cursor
 
-Install the standalone [Handoff plugin](https://github.com/psjostrom/handoff)
-from Cursor's plugin UI. It provides the bare `/handoff` command.
+The standalone [Handoff plugin](https://github.com/psjostrom/handoff) Cursor
+marketplace listing is pending review and is not yet available to install. Once
+accepted, it will provide the bare `/handoff` command.
 
 ### OpenCode
 
@@ -64,7 +65,8 @@ replace the global trusted shared-root install.
 
 An explicit `standard` or `frontier` argument wins. Without one, Handoff
 recommends a tier and asks before writing. It creates exactly one dossier under
-`.handoff/`, without modifying existing repository files or Git work state.
+`.handoff/` and adds `.handoff/` to `.git/info/exclude`; tracked files and the
+index remain unchanged.
 
 ## Behavior
 
