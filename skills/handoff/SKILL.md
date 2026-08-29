@@ -7,7 +7,7 @@ description: "Creates a self-contained handoff dossier for continuing work in a 
 
 Create a self-contained handoff dossier so a fresh agent can continue a task without polluted or overly expensive prior context. Create-only: there is no takeover skill; the dossier is the contract.
 
-Invoke as `$handoff:handoff` in Codex, `/handoff:handoff` in Claude Code, or `/handoff` in Cursor (opencode: `/handoff`). Optional tier args: `standard` or `frontier`.
+Invoke as `$handoff:handoff` in Codex, `/handoff:handoff` in Claude Code, `/handoff` in Cursor, or `/handoff` in Antigravity (opencode: `/handoff`). Optional tier args: `standard` or `frontier`.
 
 ## 1. Offer vs execute
 
@@ -21,6 +21,7 @@ Identify the active harness, then read exactly one complete reference:
 - Claude Code: [references/claude-code.md](references/claude-code.md)
 - Cursor: [references/cursor.md](references/cursor.md)
 - opencode: [references/opencode.md](references/opencode.md)
+- Antigravity: [references/antigravity.md](references/antigravity.md)
 
 Stop if the harness cannot be identified.
 

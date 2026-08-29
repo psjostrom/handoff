@@ -12,6 +12,16 @@ the dossier contract live in
 
 ## Install
 
+### Antigravity
+
+Install directly from GitHub or local directory:
+
+```sh
+agy plugin install https://github.com/psjostrom/handoff
+# Or from local clone:
+agy plugin install .
+```
+
 ### Claude Code
 
 Handoff installs through the Agent Plugins catalog:
@@ -58,6 +68,7 @@ replace the global trusted shared-root install.
 
 | Harness | Invocation | Optional tier |
 | --- | --- | --- |
+| Antigravity | `/handoff` | `standard` or `frontier` |
 | Codex | `$handoff:handoff` | `standard` or `frontier` |
 | Claude Code | `/handoff:handoff` | `standard` or `frontier` |
 | Cursor | `/handoff` | `standard` or `frontier` |
@@ -91,6 +102,7 @@ dossier contract remain in the shared skill and references:
 - [`skills/handoff/references/claude-code.md`](skills/handoff/references/claude-code.md)
 - [`skills/handoff/references/cursor.md`](skills/handoff/references/cursor.md)
 - [`skills/handoff/references/opencode.md`](skills/handoff/references/opencode.md)
+- [`skills/handoff/references/antigravity.md`](skills/handoff/references/antigravity.md)
 
 ## Develop
 
@@ -103,6 +115,7 @@ Run after platform changes:
 ```sh
 python3 scripts/validate_handoff.py
 python3 -m unittest scripts/test_validate_handoff.py
+agy plugin validate .
 ```
 
 ## Migration

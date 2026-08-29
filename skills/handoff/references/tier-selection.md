@@ -4,8 +4,8 @@ Target agent tiers for handoff dossiers:
 
 | Tier | Meaning | Example models (illustrative) |
 | --- | --- | --- |
-| `standard` | Mid-capability continuation | Claude Sonnet, GPT 5.6 Terra, Composer 2.5 |
-| `frontier` | High-capability continuation | Claude Opus, Grok 4.5, GPT 5.6 Sol |
+| `standard` | Mid-capability continuation | Claude Sonnet, GPT 5.6 Terra, Composer 2.5, Gemini Flash |
+| `frontier` | High-capability continuation | Claude Opus, Grok 4.5, GPT 5.6 Sol, Gemini 3.7 Flash High / Pro |
 
 ## Argument overrides
 
