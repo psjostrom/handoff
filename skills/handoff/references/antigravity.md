@@ -7,7 +7,7 @@ Multi-tier handoff dossier generation reference for Google Antigravity.
 - Command: `/handoff [standard|frontier]`
 - Natural language: `prepare a handoff`, `write a handoff dossier`, `handoff to standard`, `handoff to frontier`
 
-Bare `/handoff` is the Antigravity form. Shared `SKILL.md` owns the workflow.
+Bare `/handoff` is the Antigravity form. Read shared `SKILL.md` completely and follow its workflow. Shared `SKILL.md` owns the workflow.
 
 ## Gemini Model Tiers
 
