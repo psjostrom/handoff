@@ -13,6 +13,7 @@ PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 CODEX_MANIFEST = PLUGIN_ROOT / ".codex-plugin/plugin.json"
 CLAUDE_MANIFEST = PLUGIN_ROOT / ".claude-plugin/plugin.json"
 CURSOR_MANIFEST = PLUGIN_ROOT / ".cursor-plugin/plugin.json"
+ANTIGRAVITY_MANIFEST = PLUGIN_ROOT / "plugin.json"
 CLAUDE_COMMAND = PLUGIN_ROOT / "commands/handoff.md"
 OPENCODE_COMMAND = PLUGIN_ROOT / "opencode/commands/handoff.md"
 SKILL = PLUGIN_ROOT / "skills/handoff/SKILL.md"
@@ -23,6 +24,7 @@ CODEX_REFERENCE = PLUGIN_ROOT / "skills/handoff/references/codex.md"
 CLAUDE_REFERENCE = PLUGIN_ROOT / "skills/handoff/references/claude-code.md"
 CURSOR_REFERENCE = PLUGIN_ROOT / "skills/handoff/references/cursor.md"
 OPENCODE_REFERENCE = PLUGIN_ROOT / "skills/handoff/references/opencode.md"
+ANTIGRAVITY_REFERENCE = PLUGIN_ROOT / "skills/handoff/references/antigravity.md"
 README = PLUGIN_ROOT / "README.md"
 LICENSE = PLUGIN_ROOT / "LICENSE"
 
@@ -263,7 +265,7 @@ def _validate_skill_adapter_reference(
 
 
 def _validate_manifests(
-    codex: Any, claude: Any, cursor: Any, errors: list[str]
+    codex: Any, claude: Any, cursor: Any, antigravity: Any, errors: list[str]
 ) -> None:
     if isinstance(codex, dict):
         _require_equal(codex, ("name",), "handoff", "Codex manifest name", CODEX_MANIFEST, errors)
@@ -362,6 +364,14 @@ def _validate_manifests(
         _require_equal(cursor, ("skills",), "./skills/", "Cursor manifest skills path", CURSOR_MANIFEST, errors)
     elif cursor is not None:
         errors.append(f"{_display(CURSOR_MANIFEST)}: Cursor manifest root must be a JSON object")
+
+    if isinstance(antigravity, dict):
+        _require_equal(antigravity, ("name",), "handoff", "Antigravity manifest name", ANTIGRAVITY_MANIFEST, errors)
+        _require_equal(antigravity, ("version",), "1.0.0", "Antigravity manifest version", ANTIGRAVITY_MANIFEST, errors)
+        _require_equal(antigravity, ("description",), DESCRIPTION, "Antigravity manifest description", ANTIGRAVITY_MANIFEST, errors)
+    elif antigravity is not None:
+        errors.append(f"{_display(ANTIGRAVITY_MANIFEST)}: Antigravity manifest root must be a JSON object")
+
 
 
 def _validate_skill_text(skill: Optional[str], errors: list[str]) -> None:
@@ -576,7 +586,8 @@ def validate_bundle(repo_root: Path) -> list[str]:
     codex = _load_json(repo_root, CODEX_MANIFEST, errors)
     claude = _load_json(repo_root, CLAUDE_MANIFEST, errors)
     cursor = _load_json(repo_root, CURSOR_MANIFEST, errors)
-    _validate_manifests(codex, claude, cursor, errors)
+    antigravity = _load_json(repo_root, ANTIGRAVITY_MANIFEST, errors)
+    _validate_manifests(codex, claude, cursor, antigravity, errors)
 
     skill = _read_text(repo_root, SKILL, errors)
     _validate_skill_text(skill, errors)
@@ -586,11 +597,17 @@ def validate_bundle(repo_root: Path) -> list[str]:
     tier = _read_text(repo_root, TIER_REF, errors)
     _validate_reference_markers(tier, TIER_REF, TIER_MARKERS, errors)
     _validate_tier_receiver_classification(tier, TIER_REF, errors)
-    for ref in (CODEX_REFERENCE, CLAUDE_REFERENCE, CURSOR_REFERENCE, OPENCODE_REFERENCE):
+    for ref in (
+        CODEX_REFERENCE,
+        CLAUDE_REFERENCE,
+        CURSOR_REFERENCE,
+        OPENCODE_REFERENCE,
+        ANTIGRAVITY_REFERENCE,
+    ):
         text = _read_text(repo_root, ref, errors)
         if text is not None and "invocation" not in text.lower():
             errors.append(f"{_display(ref)}: must document invocation")
-        if ref in (CODEX_REFERENCE, CURSOR_REFERENCE):
+        if ref in (CODEX_REFERENCE, CURSOR_REFERENCE, ANTIGRAVITY_REFERENCE):
             _validate_skill_adapter_reference(text, ref, errors)
 
     _validate_thin_shell(_read_text(repo_root, CLAUDE_COMMAND, errors), CLAUDE_COMMAND, errors)

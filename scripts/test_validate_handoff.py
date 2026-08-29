@@ -449,5 +449,15 @@ class StandalonePackagingTests(unittest.TestCase):
                 self.assertIn(marker, readme)
 
 
+class AntigravityPackagingTests(unittest.TestCase):
+    def test_antigravity_manifest_and_adapter(self) -> None:
+        self.assertTrue((REPOSITORY_ROOT / "plugin.json").is_file())
+        self.assertTrue((REPOSITORY_ROOT / "skills/handoff/references/antigravity.md").is_file())
+        manifest = json.loads((REPOSITORY_ROOT / "plugin.json").read_text(encoding="utf-8"))
+        self.assertEqual(manifest.get("name"), "handoff")
+        self.assertEqual(manifest.get("version"), "1.0.0")
+
+
 if __name__ == "__main__":
     unittest.main()
+
