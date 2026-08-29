@@ -11,5 +11,5 @@ Bare `/handoff` is the Antigravity form. Shared `SKILL.md` owns the workflow.
 
 ## Gemini Model Tiers
 
-- **`standard`**: Gemini Flash (e.g. Gemini 2.5/3.0 Flash). Suitable for bounded continuation, clear interfaces, and routine implementation.
-- **`frontier`**: Gemini 3.7 Flash with High Reasoning (`reasoningEffort: "high"`) or Gemini Pro. Required when architecture is open, high-complexity judgment is needed, or critical invariants apply.
+- **`standard`**: `flash` (Gemini Flash). Suitable for bounded continuation, clear interfaces, and routine implementation.
+- **`frontier`**: `flash` with `--effort high` (or `pro`). Required when architecture is open, high-complexity judgment is needed, or critical invariants apply.
