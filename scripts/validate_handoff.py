@@ -367,7 +367,11 @@ def _validate_manifests(
 
     if isinstance(antigravity, dict):
         _require_equal(antigravity, ("name",), "handoff", "Antigravity manifest name", ANTIGRAVITY_MANIFEST, errors)
-        _require_equal(antigravity, ("version",), "1.0.0", "Antigravity manifest version", ANTIGRAVITY_MANIFEST, errors)
+        if "version" in antigravity:
+            errors.append(
+                f"{_display(ANTIGRAVITY_MANIFEST)}: Antigravity manifest must omit version "
+                f"(SHA-tracked delivery); found {antigravity.get('version')!r}"
+            )
         _require_equal(antigravity, ("description",), DESCRIPTION, "Antigravity manifest description", ANTIGRAVITY_MANIFEST, errors)
     elif antigravity is not None:
         errors.append(f"{_display(ANTIGRAVITY_MANIFEST)}: Antigravity manifest root must be a JSON object")

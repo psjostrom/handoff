@@ -224,6 +224,14 @@ class HandoffValidatorTests(unittest.TestCase):
         self.write_json(claude_path, claude)
         self.assert_error("must omit version")
 
+    def test_antigravity_manifest_omits_version(self) -> None:
+        ag_path = "plugin.json"
+        ag = json.loads(self.path(ag_path).read_text(encoding="utf-8"))
+        self.assertNotIn("version", ag)
+        ag["version"] = "1.0.0"
+        self.write_json(ag_path, ag)
+        self.assert_error("must omit version")
+
     def test_rejects_non_standalone_opencode_command_suffix(self) -> None:
         path = self.path("opencode/commands/handoff.md")
         path.write_text(
@@ -455,7 +463,7 @@ class AntigravityPackagingTests(unittest.TestCase):
         self.assertTrue((REPOSITORY_ROOT / "skills/handoff/references/antigravity.md").is_file())
         manifest = json.loads((REPOSITORY_ROOT / "plugin.json").read_text(encoding="utf-8"))
         self.assertEqual(manifest.get("name"), "handoff")
-        self.assertEqual(manifest.get("version"), "1.0.0")
+        self.assertNotIn("version", manifest)
 
 
 if __name__ == "__main__":

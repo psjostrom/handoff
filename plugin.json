@@ -1,5 +1,4 @@
 {
   "name": "handoff",
-  "version": "1.0.0",
   "description": "Creates self-contained handoff dossiers so a fresh standard or frontier agent can continue a task."
 }
