@@ -5,22 +5,7 @@ task without polluted or unnecessarily expensive context. It is create-only:
 there is no takeover command. The receiving agent reads the dossier and
 continues only after its tier gate passes.
 
-The shared workflow is
-[`skills/handoff/SKILL.md`](skills/handoff/SKILL.md). Platform adapters and
-the dossier contract live in
-[`skills/handoff/references/`](skills/handoff/references/).
-
 ## Install
-
-### Antigravity
-
-Install directly from GitHub or local directory:
-
-```sh
-agy plugin install https://github.com/psjostrom/handoff
-# Or from local clone:
-agy plugin install .
-```
 
 ### Claude Code
 
@@ -42,9 +27,8 @@ codex plugin add handoff@agent-plugins
 
 ### Cursor
 
-The standalone [Handoff plugin](https://github.com/psjostrom/handoff) Cursor
-marketplace listing is pending review and is not yet available to install. Once
-accepted, it will provide the bare `/handoff` command.
+The public marketplace listing is not available. Load this repository as a
+local Cursor plugin.
 
 ### OpenCode
 
@@ -64,15 +48,25 @@ replace the global trusted shared-root install.
 ./install-opencode.sh uninstall
 ```
 
+### Antigravity
+
+Install directly from GitHub or local directory:
+
+```sh
+agy plugin install https://github.com/psjostrom/handoff
+# Or from a local clone:
+agy plugin install .
+```
+
 ## Invoke
 
 | Harness | Invocation | Optional tier |
 | --- | --- | --- |
-| Antigravity | `/handoff` | `standard` or `frontier` |
-| Codex | `$handoff:handoff` | `standard` or `frontier` |
 | Claude Code | `/handoff:handoff` | `standard` or `frontier` |
+| Codex | `$handoff:handoff` | `standard` or `frontier` |
 | Cursor | `/handoff` | `standard` or `frontier` |
 | OpenCode | `/handoff` | `standard` or `frontier` |
+| Antigravity | `/handoff` | `standard` or `frontier` |
 
 An explicit `standard` or `frontier` argument wins. Without one, Handoff
 recommends a tier and asks before writing. It creates exactly one dossier under
@@ -92,8 +86,8 @@ The dossier path is:
 <repo-root>/.handoff/<slug>-YYYYMMDD-HHMM.md
 ```
 
-The detailed workflow, tier gate, slug normalization, safety checks, and
-dossier contract remain in the shared skill and references:
+The shared skill and references define the detailed workflow, tier gate, slug
+normalization, safety checks, and dossier contract:
 
 - [`skills/handoff/SKILL.md`](skills/handoff/SKILL.md)
 - [`skills/handoff/references/tier-selection.md`](skills/handoff/references/tier-selection.md)
@@ -107,8 +101,8 @@ dossier contract remain in the shared skill and references:
 ## Develop
 
 Handoff is a standalone repository at
-<https://github.com/psjostrom/handoff>. Claude Code and Codex keep catalog
-entrypoints; Cursor and OpenCode discover this repository directly.
+<https://github.com/psjostrom/handoff>. Claude Code and Codex install through
+the Agent Plugins catalog; Cursor and OpenCode use this repository directly.
 
 Run after platform changes:
 
@@ -118,27 +112,4 @@ python3 -m unittest scripts/test_validate_handoff.py
 agy plugin validate .
 ```
 
-## Migration
-
-Existing Claude Code and Codex installs continue to use the Agent Plugins
-catalog. Reinstall Cursor from this repository. For a legacy OpenCode catalog
-link, run this guarded replacement, then install:
-
-```sh
-if [ ! -L "$HOME/.config/opencode/commands/handoff.md" ]; then
-  echo "Refusing: Handoff command is not a symlink." >&2
-  exit 1
-fi
-case "$(readlink "$HOME/.config/opencode/commands/handoff.md")" in
-  */agent-plugins/plugins/handoff/opencode/commands/handoff.md)
-    rm "$HOME/.config/opencode/commands/handoff.md"
-    ;;
-  *)
-    echo "Refusing: Handoff command does not point at the legacy catalog." >&2
-    exit 1
-    ;;
-esac
-./install-opencode.sh install
-```
-
-It leaves any other link intact.
+Licensed under [MIT](LICENSE).
